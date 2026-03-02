@@ -24,7 +24,7 @@ with st.sidebar:
 if api_key:
     try:
         genai.configure(api_key=api_key)
-        model = genai.GenerativeModel('gemini-1.5-pro')
+        model = genai.GenerativeModel('gemini-pro')
         
         # Ô tải ảnh lên
         uploaded_file = st.file_uploader("Tải ảnh sản phẩm thời trang lên đây...", type=["jpg", "jpeg", "png"])
