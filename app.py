@@ -2,58 +2,66 @@ import streamlit as st
 import google.generativeai as genai
 from PIL import Image
 
-# 1. Cấu hình giao diện (Cực kỳ quan trọng để ghi điểm chuyên nghiệp)
-st.set_page_config(
-    page_title="AI Fashion Content Pro 2026",
-    page_icon="👗",
-    layout="centered"
-)
+# --- CẤU HÌNH GIAO DIỆN ---
+st.set_page_config(page_title="AI Fashion Strategy", page_icon="👗", layout="centered")
 
-# Giao diện chính
-st.title("👗 AI Fashion Content Generator")
-st.markdown("---")
-st.subheader("Trợ lý ảo tạo bài viết bán hàng thông minh")
+st.markdown("<h1 style='text-align: center; color: #FF4B4B;'>👗 AI Fashion Content Pro</h1>", unsafe_allow_html=True)
+st.write("---")
 
-# 2. Thanh bên (Sidebar) để nhập API Key - Bảo mật và gọn gàng
-with st.sidebar:
-    st.header("Cấu hình hệ thống")
-    api_key = st.text_input("Nhập Gemini API Key:", type="password", help="Lấy key tại Google AI Studio")
-    st.info("Ứng dụng sử dụng mô hình Gemini 1.5 Flash để tối ưu tốc độ và độ chính xác.")
+# --- NHẬP CHÌA KHÓA (API KEY) ---
+api_key = st.sidebar.text_input("🔑 Nhập Gemini API Key:", type="password")
 
-# 3. Logic xử lý chính
 if api_key:
-    try:
-        genai.configure(api_key=api_key)
-        model = genai.GenerativeModel('gemini-pro')
-        
-        # Ô tải ảnh lên
-        uploaded_file = st.file_uploader("Tải ảnh sản phẩm thời trang lên đây...", type=["jpg", "jpeg", "png"])
+    genai.configure(api_key=api_key)
+    model = genai.GenerativeModel('gemini-1.5-flash')
 
-        if uploaded_file is not None:
-            image = Image.open(uploaded_file)
-            st.image(image, caption='Sản phẩm của bạn', use_container_width=True)
+    # --- BƯỚC 1: UP ẢNH ---
+    uploaded_file = st.file_uploader("📸 Quăng ảnh sản phẩm vào đây...", type=["jpg", "jpeg", "png"])
+
+    if uploaded_file:
+        image = Image.open(uploaded_file)
+        st.image(image, caption='Sản phẩm cần lên bài', use_container_width=True)
+
+        # --- BƯỚC 2: AI TỰ ĐỀ XUẤT CÁC HƯỚNG VIẾT BÀI (SHOW PROMPT) ---
+        st.subheader("🤖 AI Đề Xuất Chiến Lược Nội Dung:")
+        
+        with st.spinner('AI đang nghiên cứu mẫu mã...'):
+            # Câu lệnh bắt AI tự "nghĩ" ra các hướng viết bài
+            prompt_goi_y = """
+            Nhìn ảnh này và đưa ra 3 hướng tiếp cận Marketing khác nhau. 
+            Mỗi hướng chỉ ghi 1 dòng ngắn gọn theo cấu trúc: 
+            [Tên phong cách]: [Mô tả ngắn gọn hướng viết].
+            Ví dụ: 
+            - Phong cách Nàng thơ: Tập trung vào sự dịu dàng, bay bổng.
+            - Phong cách Boss Lady: Tập trung vào sự sang trọng, quyền lực.
+            """
+            suggestion_res = model.generate_content([prompt_goi_y, image])
+            options = suggestion_res.text.strip().split('\n')
             
-            # Nút bấm kích hoạt AI
-            if st.button('✨ Tạo Content Ngay', use_container_width=True):
-                with st.spinner('Đang phân tích mẫu mã và xu hướng thời trang...'):
-                    # Prompt "xịn" để ra bài viết chất lượng
-                    prompt = """
-                    Bạn là một chuyên gia Content Marketing hàng đầu trong ngành thời trang. 
-                    Dựa trên hình ảnh này, hãy viết một bài đăng Facebook thu hút khách hàng bao gồm:
-                    1. Tiêu đề gây chú ý.
-                    2. Mô tả chi tiết về kiểu dáng, chất liệu (dự đoán).
-                    3. Gợi ý phối đồ (mix & match).
-                    4. Các hashtag hot trend năm 2026.
-                    Giọng văn: Sang chảnh, hiện đại, thuyết phục.
-                    """
-                    response = model.generate_content([prompt, image])
-                    
-                    st.success("Đã tạo xong content!")
-                    st.markdown("### Kết quả gợi ý:")
-                    st.write(response.text)
-                    st.divider()
-                    st.caption("Mẹo: Bạn có thể copy nội dung này để đăng lên Fanpage hoặc Shopee.")
-    except Exception as e:
-        st.error(f"Có lỗi xảy ra: {e}")
+        # Hiển thị các lựa chọn cho người dùng
+        choice = st.radio("Ông chủ muốn viết theo hướng nào?", options)
+
+        # --- BƯỚC 3: XUẤT BÀI VIẾT CHI TIẾT ---
+        if st.button('🚀 XUẤT BÀI VIẾT NGAY'):
+            with st.spinner('Đang múa bút tạo bài viết đỉnh cao...'):
+                final_prompt = f"""
+                Dựa trên hình ảnh sản phẩm và hướng tiếp cận: '{choice}'.
+                Hãy viết một bài đăng Facebook bán hàng cực kỳ chuyên nghiệp. 
+                Yêu cầu: 
+                - Tiêu đề giật gân.
+                - Nội dung có chiều sâu, dùng từ chuyên ngành thời trang (vibe, form, chất liệu).
+                - Có lời kêu gọi hành động (CTA) và bộ Hashtag xịn.
+                """
+                final_res = model.generate_content([final_prompt, image])
+                
+                st.success("BÀI VIẾT HOÀN CHỈNH ĐÂY BRO:")
+                st.markdown("---")
+                st.markdown(final_res.text)
+                st.balloons() # Hiệu ứng chúc mừng cho sướng mắt
+
 else:
-    st.warning("⚠️ Vui lòng nhập API Key ở thanh bên trái để bắt đầu sử dụng ứng dụng.")
+    st.warning("👈 Ông chủ nhập API Key bên trái để 'nạp xăng' cho AI nhé!")
+    st.info("Link lấy API miễn phí: https://aistudio.google.com/app/apikey")
+
+st.sidebar.write("---")
+st.sidebar.caption("Sản phẩm của: Chuyên gia AI Fashion (Cấp độ 2)")
