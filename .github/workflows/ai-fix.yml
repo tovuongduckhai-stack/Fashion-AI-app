@@ -1,0 +1,28 @@
+name: AI Self-Healing Agent
+on: [push]
+
+jobs:
+  monitor-and-fix:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_PAT }}
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Install Dependencies
+        run: pip install openai requests
+
+      - name: Run AI Healer
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GH_PAT: ${{ secrets.GH_PAT }}
+          REPO_NAME: ${{ github.repository }}
+        run: |
+          echo "Agent đã sẵn sàng. Đang chờ lệnh thực thi sửa lỗi..."
