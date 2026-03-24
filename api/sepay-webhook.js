@@ -2,7 +2,7 @@ import { createClient } from '@supabase/supabase-js';
 
 const SUPABASE_URL = 'https://jvsnvllauayliiasgzdze.supabase.co';
 const SUPABASE_SECRET_KEY = process.env.SECRET_KEY;
-const SEPAY_API_KEY = process.env.SEPAY_API_KEY; // thêm vào Vercel env
+const SEPAY_API_KEY = process.env.SEPAY_API_KEY;
 
 const PLAN_CREDITS = {
   199000: { credits: 30,  plan: 'Starter' },
@@ -15,7 +15,6 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
-  // ✅ Verify API Key từ SePay
   const authHeader = req.headers['authorization'] || '';
   if (SEPAY_API_KEY && authHeader !== `Apikey ${SEPAY_API_KEY}`) {
     console.log('Unauthorized webhook call');
@@ -47,11 +46,16 @@ export default async function handler(req, res) {
       if (data) user = data;
     }
 
-    // Tìm theo mã STY-XXXXX
+    // Tìm theo mã STY-XXXXX (MB Bank tự xóa dấu - nên cần normalize lại)
     if (!user) {
       const codeMatch = description.match(/STY-?[A-Z0-9]{5,8}/);
       if (codeMatch) {
-        const { data } = await supabase.from('users').select('*').eq('user_code', codeMatch[0]).single();
+        let userCode = codeMatch[0];
+        if (!userCode.includes('-')) {
+          userCode = userCode.slice(0, 3) + '-' + userCode.slice(3); // STYXXXXX → STY-XXXXX
+        }
+        console.log('Tìm user theo mã:', userCode);
+        const { data } = await supabase.from('users').select('*').eq('user_code', userCode).single();
         if (data) user = data;
       }
     }
