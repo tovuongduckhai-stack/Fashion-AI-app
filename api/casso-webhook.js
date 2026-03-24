@@ -16,11 +16,7 @@ export default async function handler(req, res) {
   }
 
   // Verify key bảo mật từ Casso
- const secureToken = req.headers['secure-token'] || req.headers['authorization'] || req.headers['x-secure-token'];
-  if (CASSO_SECRET_KEY && secureToken !== CASSO_SECRET_KEY) {
-    console.log('Unauthorized:', secureToken);
-    return res.status(401).json({ error: 'Unauthorized' });
-  }
+ 
 
   try {
     const body = req.body;
