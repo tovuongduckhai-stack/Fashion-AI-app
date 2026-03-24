@@ -1,17 +1,25 @@
-const { createClient } = require('@supabase/supabase-js');
+import { createClient } from '@supabase/supabase-js';
 
 const SUPABASE_URL = 'https://jvsnvllauayliiasgzdze.supabase.co';
 const SUPABASE_SECRET_KEY = process.env.SECRET_KEY;
+const SEPAY_API_KEY = process.env.SEPAY_API_KEY; // thêm vào Vercel env
 
 const PLAN_CREDITS = {
-  199000: { credits: 30, plan: 'Starter' },
+  199000: { credits: 30,  plan: 'Starter' },
   499000: { credits: 100, plan: 'Pro' },
-  15000: { credits: 1, plan: 'Credit lẻ' },
+  15000:  { credits: 1,   plan: 'Credit lẻ' },
 };
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method Not Allowed' });
+  }
+
+  // ✅ Verify API Key từ SePay
+  const authHeader = req.headers['authorization'] || '';
+  if (SEPAY_API_KEY && authHeader !== `Apikey ${SEPAY_API_KEY}`) {
+    console.log('Unauthorized webhook call');
+    return res.status(401).json({ error: 'Unauthorized' });
   }
 
   try {
@@ -20,7 +28,6 @@ export default async function handler(req, res) {
 
     const amount = parseInt(body.transferAmount || body.amount || 0);
     const description = (body.content || body.description || '').toUpperCase();
-
     console.log('Amount:', amount, '| Description:', description);
 
     const planInfo = PLAN_CREDITS[amount];
@@ -30,29 +37,27 @@ export default async function handler(req, res) {
     }
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SECRET_KEY);
-
     let user = null;
 
+    // Tìm theo email
     const emailMatch = description.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i);
     if (emailMatch) {
       const email = emailMatch[0].toLowerCase();
-      console.log('Tìm user theo email:', email);
       const { data } = await supabase.from('users').select('*').eq('email', email).single();
       if (data) user = data;
     }
 
+    // Tìm theo mã STY-XXXXX
     if (!user) {
       const codeMatch = description.match(/STY-[A-Z0-9]{5}/);
       if (codeMatch) {
-        const userCode = codeMatch[0];
-        console.log('Tìm user theo mã:', userCode);
-        const { data } = await supabase.from('users').select('*').eq('user_code', userCode).single();
+        const { data } = await supabase.from('users').select('*').eq('user_code', codeMatch[0]).single();
         if (data) user = data;
       }
     }
 
     if (!user) {
-      console.log('Không tìm thấy user!');
+      console.log('Không tìm thấy user! Description:', description);
       return res.status(200).json({ message: 'Không tìm thấy user' });
     }
 
