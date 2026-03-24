@@ -49,7 +49,7 @@ export default async function handler(req, res) {
 
     // Tìm theo mã STY-XXXXX
     if (!user) {
-      const codeMatch = description.match(/STY-[A-Z0-9]{5}/);
+      const codeMatch = description.match(/STY-?[A-Z0-9]{5,8}/);
       if (codeMatch) {
         const { data } = await supabase.from('users').select('*').eq('user_code', codeMatch[0]).single();
         if (data) user = data;
