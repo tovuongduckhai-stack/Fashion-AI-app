@@ -2,7 +2,6 @@ import { createClient } from '@supabase/supabase-js';
 
 const SUPABASE_URL = 'https://jvsnvllauayliiasgzdze.supabase.co';
 const SUPABASE_SECRET_KEY = process.env.SECRET_KEY;
-const CASSO_SECRET_KEY = process.env.CASSO_SECRET_KEY;
 
 const PLAN_CREDITS = {
   199000: { credits: 30,  plan: 'Starter' },
@@ -15,14 +14,12 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
-  // Verify key bảo mật từ Casso
- 
-
   try {
     const body = req.body;
     console.log('Casso webhook:', JSON.stringify(body));
 
-    const transactions = body.data || [];
+    // Casso V2 gửi single object hoặc array
+    const transactions = Array.isArray(body.data) ? body.data : (body.data ? [body.data] : [body]);
 
     for (const tx of transactions) {
       const amount = parseInt(tx.amount || 0);
