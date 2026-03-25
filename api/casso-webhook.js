@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 
 const SUPABASE_URL = 'https://jvsnvllauayliiasgzdze.supabase.co';
-const SUPABASE_SECRET_KEY = process.env.SECRET_KEY;
+const SUPABASE_SECRET_KEY = process.env.SUPABASE_SECRET_KEY;
 
 const PLAN_CREDITS = {
   199000: { credits: 30,  plan: 'Starter' },
