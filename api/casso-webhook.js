@@ -10,12 +10,21 @@ const PLAN_CREDITS = {
 };
 
 export default async function handler(req, res) {
+  // Validate request method
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
+  // Validate content type
+  if (!req.headers['content-type']?.includes('application/json')) {
+    return res.status(400).json({ error: 'Invalid Content-Type' });
+  }
+
   try {
     const body = req.body;
+    if (!body || (!body.data && !Array.isArray(body))) {
+      return res.status(400).json({ error: 'Invalid request body' });
+    }
     console.log('Casso webhook:', JSON.stringify(body));
 
     // Casso V2 gửi single object hoặc array
@@ -63,21 +72,24 @@ export default async function handler(req, res) {
       }
 
       const newCredits = (user.credits || 0) + planInfo.credits;
-      const { error: updateError } = await supabase
-        .from('users')
-        .update({
-          credits: newCredits,
-          plan: planInfo.plan,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', user.id);
+      
+      // Sử dụng transaction để đảm bảo cả 2 thao tác cùng thành công hay cùng thất bại
+      const { error: transactionError } = await supabase.rpc('handle_payment', {
+        user_id: user.id,
+        new_credits: newCredits,
+        plan_name: planInfo.plan,
+        tx_amount: amount,
+        tx_content: description,
+        user_email: user.email,
+        credits_added: planInfo.credits
+      });
 
-      if (updateError) {
-        console.log('Lỗi update:', updateError.message);
+      if (transactionError) {
+        console.log('Lỗi transaction:', transactionError.message);
         continue;
       }
 
-      console.log(`✅ Cộng ${planInfo.credits} credits cho ${user.email}. Tổng: ${newCredits}`);
+      console.log(`✅ Đã cộng ${planInfo.credits} credits ($${amount}) cho ${user.email}. Tổng: ${newCredits}`);
     }
 
     return res.status(200).json({ success: true });
