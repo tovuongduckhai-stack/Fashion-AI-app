@@ -8,7 +8,8 @@ CREATE TABLE IF NOT EXISTS users (
   user_code TEXT UNIQUE,
   credits INTEGER DEFAULT 0,
   plan TEXT DEFAULT 'free',
-  created_at TIMESTAMP DEFAULT NOW()
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP
 );
 
 -- Bảng transactions (lịch sử giao dịch)
