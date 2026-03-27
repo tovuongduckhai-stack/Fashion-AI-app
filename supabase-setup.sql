@@ -24,9 +24,19 @@ CREATE TABLE IF NOT EXISTS transactions (
   created_at TIMESTAMP DEFAULT NOW()
 );
 
--- Cho phép đọc/ghi (tắt RLS cho đơn giản)
-ALTER TABLE users DISABLE ROW LEVEL SECURITY;
-ALTER TABLE transactions DISABLE ROW LEVEL SECURITY;
+-- Tắt Row Level Security để đơn giản hóa truy cập API
+-- Lưu ý: Trong môi trường production nên bật RLS và cấu hình policy phù hợp
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM pg_tables WHERE tablename = 'users') THEN
+    ALTER TABLE users DISABLE ROW LEVEL SECURITY;
+  END IF;
+  
+  IF EXISTS (SELECT 1 FROM pg_tables WHERE tablename = 'transactions') THEN
+    ALTER TABLE transactions DISABLE ROW LEVEL SECURITY;
+  END IF;
+END
+$$;
 
 -- Tạo function xử lý thanh toán
 CREATE OR REPLACE FUNCTION handle_payment(
