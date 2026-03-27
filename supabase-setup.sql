@@ -27,16 +27,26 @@ CREATE TABLE IF NOT EXISTS transactions (
 -- Tắt Row Level Security để đơn giản hóa truy cập API
 -- Lưu ý: Trong môi trường production nên bật RLS và cấu hình policy phù hợp
 DO $$
+DECLARE
+  users_table_exists BOOLEAN;
+  transactions_table_exists BOOLEAN;
 BEGIN
-  IF EXISTS (SELECT 1 FROM pg_tables WHERE tablename = 'users') THEN
-    ALTER TABLE users DISABLE ROW LEVEL SECURITY;
+  -- Kiểm tra sự tồn tại của các bảng
+  SELECT EXISTS (SELECT 1 FROM pg_tables WHERE tablename = 'users') INTO users_table_exists;
+  SELECT EXISTS (SELECT 1 FROM pg_tables WHERE tablename = 'transactions') INTO transactions_table_exists;
+  
+  -- Tắt RLS nếu bảng tồn tại
+  IF users_table_exists THEN
+    EXECUTE 'ALTER TABLE users DISABLE ROW LEVEL SECURITY';
+    RAISE NOTICE 'Disabled RLS for users table';
   END IF;
   
-  IF EXISTS (SELECT 1 FROM pg_tables WHERE tablename = 'transactions') THEN
-    ALTER TABLE transactions DISABLE ROW LEVEL SECURITY;
+  IF transactions_table_exists THEN
+    EXECUTE 'ALTER TABLE transactions DISABLE ROW LEVEL SECURITY';
+    RAISE NOTICE 'Disabled RLS for transactions table';
   END IF;
 END
-$$;
+$$ LANGUAGE plpgsql;
 
 -- Tạo function xử lý thanh toán
 CREATE OR REPLACE FUNCTION handle_payment(
