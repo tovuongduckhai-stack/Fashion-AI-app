@@ -35,17 +35,20 @@ export default async function handler(req, res) {
         const { data } = await supabase.from('users').select('*').eq('email', emailMatch[0].toLowerCase()).single();
         if (data) user = data;
       }
-      if (!user) {
-        const codeMatch = description.match(/STY-?[A-Z0-9]{5,8}/);
-        if (codeMatch) {
-          let userCode = codeMatch[0];
-          if (!userCode.includes('-')) userCode = userCode.slice(0, 3) + '-' + userCode.slice(3);
-          console.log('Tìm user theo mã:', userCode);
-          const { data } = await supabase.from('users').select('*').eq('user_code', userCode).single();
-          if (data) user = data;
-        }
-      }
-      if (!user) { console.log('Không tìm thấy user:', description); continue; }
+if (!user) {
+  const codeMatch = description.match(/STY-?[A-Z0-9]{5,8}/);
+  if (codeMatch) {
+    const raw = codeMatch[0].replace('-', '');
+    const withDash = raw.slice(0, 3) + '-' + raw.slice(3);
+    const withoutDash = raw;
+    console.log('Tìm user theo mã:', withDash, 'hoặc', withoutDash);
+    const { data } = await supabase.from('users').select('*')
+      .or(`user_code.eq.${withDash},user_code.eq.${withoutDash}`)
+      .single();
+    if (data) user = data;
+  }
+}
+           if (!user) { console.log('Không tìm thấy user:', description); continue; }
       const newCredits = (user.credits || 0) + planInfo.credits;
       const { error } = await supabase.from('users').update({ credits: newCredits, plan: planInfo.plan, updated_at: new Date().toISOString() }).eq('id', user.id);
       if (error) { console.log('Lỗi update:', error.message); continue; }
