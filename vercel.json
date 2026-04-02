@@ -5,7 +5,8 @@
     { "src": "index.html", "use": "@vercel/static" }
   ],
   "routes": [
-    { "src": "/api/(.*)", "dest": "/api/$1" },
+    { "src": "/api/casso-webhook", "dest": "/api/casso-webhook.js" },
+    { "src": "/api/analyze", "dest": "/api/analyze.js" },
     { "src": "/(.*)", "dest": "/index.html" }
   ]
 }
