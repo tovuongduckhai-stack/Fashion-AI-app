@@ -7,7 +7,7 @@ module.exports = async function handler(req, res) {
     const description = (tx.content || tx.description || '').toUpperCase();
     console.log('TX:', txId, 'Amount:', amount, 'Desc:', description);
 
-    const SUPABASE_URL = 'https://jvsnvllauayliiasgzdze.supabase.co';
+    const SUPABASE_URL = 'https://vltlchbdghdiatsousxu.supabase.co';
     const KEY = process.env.SUPABASE_SERVICE_KEY;
     const headers = { 'Content-Type': 'application/json', 'apikey': KEY, 'Authorization': `Bearer ${KEY}` };
 
