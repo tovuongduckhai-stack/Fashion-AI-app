@@ -7,6 +7,8 @@
   "routes": [
     { "src": "/api/sepay-webhook", "dest": "/api/sepay-webhook.js" },
     { "src": "/api/analyze", "dest": "/api/analyze.js" },
+    { "src": "/api/sync-user", "dest": "/api/sync-user.js" },
+    { "src": "/api/use-credit", "dest": "/api/use-credit.js" },
     { "src": "/(.*)", "dest": "/index.html" }
   ]
 }
