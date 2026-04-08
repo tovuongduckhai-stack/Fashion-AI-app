@@ -15,7 +15,7 @@ module.exports = async function handler(req, res) {
     const planInfo = PLAN_CREDITS[amount];
     if (!planInfo) { console.log('Khong khop tier:', amount); return res.status(200).json({ success: true }); }
 
-    const codeMatch = description.match(/STY-?[A-Z0-9]{3,8}/);
+    const codeMatch = description.match(/STY-?[A-Z0-9]{5,8}(?=\s|$)/);
     if (!codeMatch) { console.log('Khong co STY code'); return res.status(200).json({ success: true }); }
 
     const raw = codeMatch[0].replace(/-/g, '');
