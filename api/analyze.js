@@ -1,26 +1,20 @@
-// /api/analyze.js — Vercel Serverless Function
-// ✅ OPENAI_KEY nằm ở đây, browser không bao giờ thấy được
-
-const AI_PROMPT = `You are a Vietnamese fashion marketing expert. Analyze this clothing product image and return ONLY a JSON object. No markdown, no text outside JSON.
-IMPORTANT: You MUST include ALL fields especially "kich_thuoc" array with exactly 4 sizes.
+const AI_PROMPT = `You are a professional fashion marketing expert for global e-commerce. Analyze this clothing product image and return ONLY a valid JSON object. No markdown, no explanation, no text outside JSON. Use double quotes only. Do not use special characters inside string values.
 Return this exact JSON structure:
-{"ten_san_pham":"tên sản phẩm hấp dẫn bằng tiếng Việt","mo_ta_ngan":"caption 1 câu ngắn gọn","mo_ta_chi_tiet":"mô tả 3-4 câu về chất liệu và kiểu dáng","hashtag":["#thờitrang","#ootd","#fashion","#style","#outfit","#fyp"],"kich_thuoc":[{"size":"S","vong_eo":"60-64cm","vong_mong":"86-90cm","dai":"98cm"},{"size":"M","vong_eo":"65-69cm","vong_mong":"91-95cm","dai":"99cm"},{"size":"L","vong_eo":"70-74cm","vong_mong":"96-100cm","dai":"100cm"},{"size":"XL","vong_eo":"75-80cm","vong_mong":"101-106cm","dai":"101cm"}],"script_video":"[Cảnh quay 1] mô tả cảnh đầu. [Text] câu hook. [Cảnh quay 2] mô tả tiếp. [Text] điểm nổi bật. [Cảnh quay 3] cảnh kết. [Text] call to action mua ngay","gia_de_xuat":"150.000 - 350.000 VNĐ","mau_sac":"màu chính của sản phẩm","chat_lieu":"chất liệu dự đoán","diem_ban":["Điểm nổi bật 1","Điểm nổi bật 2","Điểm nổi bật 3"]}`;
+{"product_name":"catchy product name in English","short_caption":"one punchy caption sentence","detailed_description":"3-4 sentences about material style and fit","hashtags":["#fashion","#ootd","#style","#outfit","#fyp","#fashionista"],"size_chart":[{"size":"S","waist":"24-25in","hips":"34-35in","length":"38in"},{"size":"M","waist":"26-27in","hips":"36-37in","length":"39in"},{"size":"L","waist":"28-29in","hips":"38-39in","length":"40in"},{"size":"XL","waist":"30-32in","hips":"40-42in","length":"41in"}],"video_script":"Scene 1: describe opening shot. Text: hook line. Scene 2: describe mid shot. Text: key selling point. Scene 3: closing shot. Text: call to action","suggested_price":"$25 - $65 USD","color":"main color of product","material":"predicted fabric material","selling_points":["Selling point 1","Selling point 2","Selling point 3"]}`;
 
 export default async function handler(req, res) {
-  // Chỉ cho phép POST
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
   const { imageBase64, imageMime } = req.body;
-
   if (!imageBase64 || !imageMime) {
-    return res.status(400).json({ error: 'Thiếu imageBase64 hoặc imageMime' });
+    return res.status(400).json({ error: 'Missing imageBase64 or imageMime' });
   }
 
-  const apiKey = process.env.OPENAI_KEY; // ✅ Lấy từ Vercel Environment Variables
+  const apiKey = process.env.OPENAI_KEY;
   if (!apiKey) {
-    return res.status(500).json({ error: 'Server chưa cấu hình API key' });
+    return res.status(500).json({ error: 'API key not configured' });
   }
 
   try {
@@ -48,7 +42,6 @@ export default async function handler(req, res) {
 
     const data = await response.json();
     return res.status(200).json(data);
-
   } catch (err) {
     return res.status(500).json({ error: { message: err.message } });
   }
