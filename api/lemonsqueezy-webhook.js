@@ -70,7 +70,7 @@ module.exports = async (req, res) => {
 
     // Ghi transaction
     await supabase.from('processed_transactions').insert({
-      tx_id: 'LS_' + String(orderId)
+      tx_id: 'LS_' + String(orderId),
       user_code: userCode,
       amount: credits,
       note: `LS ${plan} — order ${orderId}`
