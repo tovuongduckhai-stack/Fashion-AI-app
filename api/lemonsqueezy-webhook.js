@@ -6,12 +6,23 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_KEY
 );
 
-// Dùng giá tiền để xác định plan (đơn vị cents)
+// Tắt body parser của Vercel để lấy raw body
+module.exports.config = { api: { bodyParser: false } };
+
 function getPlanByTotal(total) {
   if (total <= 99)   return { credits: 1,   plan: 'Pay-per-use' };
   if (total <= 800)  return { credits: 30,  plan: 'Starter' };
   if (total <= 1900) return { credits: 100, plan: 'Pro' };
   return null;
+}
+
+function getRawBody(req) {
+  return new Promise((resolve, reject) => {
+    let data = '';
+    req.on('data', chunk => data += chunk);
+    req.on('end', () => resolve(data));
+    req.on('error', reject);
+  });
 }
 
 module.exports = async (req, res) => {
@@ -21,26 +32,26 @@ module.exports = async (req, res) => {
   const signature = req.headers['x-signature'];
   if (!secret || !signature) return res.status(400).json({ error: 'Missing signature' });
 
-  const rawBody = JSON.stringify(req.body);
+  const rawBody = await getRawBody(req);
   const hmac = crypto.createHmac('sha256', secret).update(rawBody).digest('hex');
   if (hmac !== signature) return res.status(401).json({ error: 'Invalid signature' });
 
+  const body = JSON.parse(rawBody);
   const eventName = req.headers['x-event-name'];
-  if (eventName !== 'order_created') return res.status(200).json({ message: 'Ignored: ' + eventName });
+  if (eventName !== 'order_created') return res.status(200).json({ message: 'Ignored' });
 
   try {
-    const data = req.body?.data;
+    const data = body?.data;
     const orderId  = data?.id;
     const status   = data?.attributes?.status;
-    const total    = data?.attributes?.total;         // cents: 99, 800, 1900
-    const userCode = data?.attributes?.custom_data?.user_code;
+    const total    = data?.attributes?.total;
+    const userCode = body?.meta?.custom_data?.user_code;
 
     console.log('[LS] order:', orderId, '| status:', status, '| total:', total, '| code:', userCode);
 
     if (status !== 'paid') return res.status(200).json({ message: 'Not paid' });
     if (!userCode) return res.status(200).json({ error: 'No user_code' });
 
-    // Chống duplicate
     const { data: existing } = await supabase
       .from('processed_transactions')
       .select('id')
@@ -53,7 +64,6 @@ module.exports = async (req, res) => {
 
     const { credits, plan } = planInfo;
 
-    // Tìm user
     const { data: userRow, error: userErr } = await supabase
       .from('users')
       .select('id, credits')
@@ -61,14 +71,8 @@ module.exports = async (req, res) => {
       .single();
     if (userErr || !userRow) return res.status(200).json({ error: 'User not found: ' + userCode });
 
-    // Cộng credit
-    const { error: updateErr } = await supabase
-      .from('users')
-      .update({ credits: (userRow.credits || 0) + credits, plan })
-      .eq('user_code', userCode);
-    if (updateErr) return res.status(500).json({ error: 'DB error' });
+    await supabase.from('users').update({ credits: (userRow.credits || 0) + credits, plan }).eq('user_code', userCode);
 
-    // Ghi transaction
     await supabase.from('processed_transactions').insert({
       tx_id: 'LS_' + String(orderId),
       user_code: userCode,
