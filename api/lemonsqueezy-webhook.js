@@ -44,7 +44,7 @@ module.exports = async (req, res) => {
     const { data: existing } = await supabase
       .from('processed_transactions')
       .select('id')
-      .eq('transaction_id', 'LS_' + String(orderId))
+      .eq('tx_id', 'LS_' + String(orderId))
       .single();
     if (existing) return res.status(200).json({ message: 'Already processed' });
 
@@ -70,7 +70,7 @@ module.exports = async (req, res) => {
 
     // Ghi transaction
     await supabase.from('processed_transactions').insert({
-      transaction_id: 'LS_' + String(orderId),
+      tx_id: 'LS_' + String(orderId)
       user_code: userCode,
       amount: credits,
       note: `LS ${plan} — order ${orderId}`
