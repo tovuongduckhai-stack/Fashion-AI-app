@@ -34,14 +34,6 @@ const PLANS={
   Pro:{price:19,label:"$19",per:"/month",credits:100},
   "Pay-per-use":{price:0.99,label:"$0.99",per:"/credit",credits:1}
 };
-
-// ── Lemon Squeezy checkout links ──
-const LS_LINKS={
-  "Starter":"https://stylair.lemonsqueezy.com/checkout/buy/b1240ea1-9e3a-47f2-b311-e23df29499d2",
-  "Pro":"https://stylair.lemonsqueezy.com/checkout/buy/b05ccc64-3231-46dd-8600-25303592debe",
-  "Pay-per-use":"https://stylair.lemonsqueezy.com/checkout/buy/ae69aac4-c2e5-4aa4-bdb6-56b5026934d0"
-};
-
 const BANK={name:"TÔ VƯƠNG ĐỨC KHẢI",bankId:"MB",account:"0705351608",display:"0705351608"};
 const G={bg:"#080808",sur:"#111111",bor:"#1a2a1a",gold:"#4CAF50",gdim:"#2d6e30",tx:"#E8E0D0",dim:"#7a7060",faint:"#1a2a1a",red:"#e05050",grn:"#50c878"};
 
@@ -150,10 +142,8 @@ return(
 );
 }
 
-// ── PaymentModal — redirect sang Lemon Squeezy ──
 function PaymentModal({planName,userCode,onClose}){
 const plan=PLANS[planName];
-const checkoutUrl=LS_LINKS[planName]+"?checkout[custom][user_code]="+encodeURIComponent(userCode||"");
 return(
 <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.96)",zIndex:99999,display:"flex",alignItems:"center",justifyContent:"center",padding:16,overflowY:"auto"}}>
 <div style={{background:G.sur,border:`1px solid ${G.gdim}`,borderRadius:20,padding:"26px 22px",maxWidth:380,width:"100%",margin:"auto"}}>
@@ -162,18 +152,15 @@ return(
 <div style={{fontSize:22,fontWeight:"bold",color:G.gold}}>{planName}</div>
 <div style={{fontSize:28,fontWeight:"bold",marginTop:4}}>{plan.label}<span style={{fontSize:13,color:G.dim}}>{plan.per}</span></div>
 </div>
-<div style={{background:"#0d160d",border:`1px solid ${G.gdim}`,borderRadius:10,padding:"14px",marginBottom:18,textAlign:"center"}}>
-<div style={{fontSize:12,color:G.gold,marginBottom:6,fontWeight:"bold"}}>✅ Secure checkout via Lemon Squeezy</div>
-<div style={{fontSize:11,color:G.dim,lineHeight:1.8}}>International cards accepted · Instant activation after payment</div>
+<div style={{background:"#140f00",border:`1px solid ${G.gdim}`,borderRadius:10,padding:"16px",marginBottom:18,textAlign:"center"}}>
+<div style={{fontSize:14,color:G.dim,marginBottom:10}}>💳 Stripe payment coming soon!</div>
+<div style={{fontSize:12,color:G.faint,lineHeight:1.8}}>We're integrating Stripe for secure international payments.<br/>Contact us to unlock your account early:</div>
+<div style={{marginTop:10,fontSize:13,color:G.gold,fontWeight:"bold"}}>support@stylair.app</div>
 </div>
 <div style={{background:"#0d0d0d",border:`1px solid ${G.bor}`,borderRadius:10,padding:"10px 14px",marginBottom:18}}>
 <div style={{fontSize:10,color:G.dim,marginBottom:4}}>🪪 Your customer code:</div>
 <div style={{fontSize:15,fontWeight:"bold",color:G.gold}}>{userCode}</div>
-<div style={{fontSize:10,color:G.faint,marginTop:4}}>This code is auto-attached to your order</div>
 </div>
-<a href={checkoutUrl} target="_blank" rel="noopener noreferrer" style={{display:"block",textDecoration:"none",marginBottom:12}}>
-<Btn ch="💳 Proceed to Checkout →" onClick={()=>{}} variant="gold" full/>
-</a>
 <Btn ch="Close" onClick={onClose} variant="ghost" full sz="sm"/>
 </div>
 </div>
